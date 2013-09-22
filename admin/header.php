@@ -3,6 +3,7 @@ include "../include/db.php";
 // get task
 if(isset($_GET['task'])) { $task = $_GET['task']; } 
 else if(isset($_POST['task'])) { $task = $_POST['task']; }
+else $task = '';
 
 // get view
 if(isset($_GET['view'])) { $view = $_GET['view']; } 

@@ -1,22 +1,22 @@
 <?php
 
 // mysql hostname
-$db_host = "";
+$db_host = "localhost";
 
 // database name
-$db_name = "";
+$db_name = "fookup_map";
 
 // database user name
-$db_user = "";
+$db_user = "fookup";
 
 // database password
-$db_pass = "";
+$db_pass = "tsNuX4Q48Lz4nJWW";
 
 // admin username
 $admin_user = "admin";
 
 // admin password
-$admin_pass = "letsgetmappy";
+$admin_pass = "vietnam2030";
 
 
 // StartupGenome.com integration (optional)

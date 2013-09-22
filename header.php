@@ -18,7 +18,3 @@ function parseInput($value) {
   $value = str_replace("\n", "", $value);
   return $value;
 }
-
-
-
-?>
