@@ -1,7 +1,6 @@
 var map;
 var infowindow = null;
 var gmarkers = [];
-var markerTitles = [];
 var highestZIndex = 0;
 var agent = "default";
 var zoomControl = true;
@@ -14,10 +13,19 @@ var FoodCtrl = function($scope, $http) {
     {id: 'moderate', title: 'Moderate'},
     {id: 'hiend', title: 'Hi-end'}
   ];
+  $scope.markerTitles = [];
+
+  $scope.restaurantCount = function(type) {
+    // TODO: Can be replaced into functional programming (reduce)
+    var count = 0;
+    $.each($scope.restaurants, function (i, r) {
+      if (r.type == type) count++;
+    });
+    return count;
+  }
 
   // initialize map
   $scope.init  = function() {
-    console.log('init');
     // set map options
     var myOptions = {
       zoom: 12,
@@ -57,6 +65,7 @@ var FoodCtrl = function($scope, $http) {
       // 233 Quan An Vietnam,Singapore 427491 ,233 Joo Chiat Road Singapore,1.31101,103.901287,hiend
       // title, postal_coe, addr, lat, lng, type
       $.each(data, function (i, r) {
+        console.log(r);
         var place = {
           id: i,
           type: r[5],
@@ -66,10 +75,108 @@ var FoodCtrl = function($scope, $http) {
           lng: r[4]
         };
         $scope.restaurants.push(place);
+        $scope.markerTitles.push(place.title);
       });
 
+      $scope.processMarkers($scope.restaurants);
+    });
+  }
 
-      processMarkers($scope.restaurants);
+  $scope.processMarkers = function(markers) {
+    // add markers
+    $.each(markers, function (i, val) {
+      infowindow = new google.maps.InfoWindow({
+        content: ""
+      });
+
+      // offset latlong ever so slightly to prevent marker overlap
+      rand_x = Math.random();
+      rand_y = Math.random();
+      val.lat = parseFloat(val.lat) + parseFloat(parseFloat(rand_x) / 6000);
+      val.lng = parseFloat(val.lng) + parseFloat(parseFloat(rand_y) / 6000);
+
+      // show smaller marker icons on mobile
+      if (agent == "iphone") {
+        var iconSize = new google.maps.Size(16, 19);
+      } else {
+        iconSize = null;
+      }
+
+      // build this marker
+      var markerImage = new google.maps.MarkerImage("./images/icons/" + val.type + ".png", null, null, null, iconSize);
+      var marker = new google.maps.Marker({
+        position: new google.maps.LatLng(val.lat, val.lng),
+        map: map,
+        title: '',
+        clickable: true,
+        infoWindowHtml: '',
+        zIndex: 10 + i,
+        icon: markerImage
+      });
+      marker.type = val.type;
+      gmarkers.push(marker);
+
+      // add marker hover events (if not viewing on mobile)
+      if (agent == "default") {
+        google.maps.event.addListener(marker, "mouseover", function () {
+          this.old_ZIndex = this.getZIndex();
+          this.setZIndex(9999);
+          $("#marker" + i).css("display", "inline");
+          $("#marker" + i).css("z-index", "99999");
+        });
+        google.maps.event.addListener(marker, "mouseout", function () {
+          if (this.old_ZIndex && zoomLevel <= 15) {
+            this.setZIndex(this.old_ZIndex);
+            $("#marker" + i).css("display", "none");
+          }
+        });
+      }
+
+      // format marker URI for display and linking
+      var markerURI = val.uri || '';
+      if (markerURI.substr(0, 7) != "http://") {
+        markerURI = "http://" + markerURI;
+      }
+      var markerURI_short = markerURI.replace("http://", "");
+      var markerURI_short = markerURI_short.replace("www.", "");
+
+      // add marker click effects (open infowindow)
+      google.maps.event.addListener(marker, 'click', function () {
+        infowindow.setContent(
+          "<div class='marker_title'>" + val.title + "</div>" +
+            "<div class='marker_uri'><a target='_blank' href='" + markerURI + "'>" + markerURI_short +
+            "</a></div>" + "<div class='marker_desc'>" + val.description + "</div>" + "<div class='marker_address'>"+ val.description + " </div>"
+        )
+        ;
+        infowindow.open(map, this);
+      });
+
+  // add marker label
+      var latLng = new google.maps.LatLng(val.lat, val.lng);
+      var label = new Label({
+        map: map,
+        id: i
+      });
+      label.bindTo('position', marker);
+      label.set("text", val.title);
+      label.bindTo('visible', marker);
+      label.bindTo('clickable', marker);
+      label.bindTo('zIndex', marker);
+    });
+
+
+  // zoom to marker if selected in search typeahead list
+    $('#search').typeahead({
+      source: $scope.markerTitles,
+      onselect: function (obj) {
+        marker_id = jQuery.inArray(obj, $scope.markerTitles);
+        if (marker_id > -1) {
+          map.panTo(gmarkers[marker_id].getPosition());
+          map.setZoom(15);
+          google.maps.event.trigger(gmarkers[marker_id], 'click');
+        }
+        $("#search").val("");
+      }
     });
   }
 
@@ -167,104 +274,6 @@ var mapStyles = [
     ]
   }
 ];
-
-function processMarkers(markers) {
-  // add markers
-  $.each(markers, function (i, val) {
-    infowindow = new google.maps.InfoWindow({
-      content: ""
-    });
-
-    // offset latlong ever so slightly to prevent marker overlap
-    rand_x = Math.random();
-    rand_y = Math.random();
-    val.lat = parseFloat(val.lat) + parseFloat(parseFloat(rand_x) / 6000);
-    val.lng = parseFloat(val.lng) + parseFloat(parseFloat(rand_y) / 6000);
-
-    // show smaller marker icons on mobile
-    if (agent == "iphone") {
-      var iconSize = new google.maps.Size(16, 19);
-    } else {
-      iconSize = null;
-    }
-
-    // build this marker
-    var markerImage = new google.maps.MarkerImage("./images/icons/" + val.type + ".png", null, null, null, iconSize);
-    var marker = new google.maps.Marker({
-      position: new google.maps.LatLng(val.lat, val.lng),
-      map: map,
-      title: '',
-      clickable: true,
-      infoWindowHtml: '',
-      zIndex: 10 + i,
-      icon: markerImage
-    });
-    marker.type = val.type;
-    gmarkers.push(marker);
-
-    // add marker hover events (if not viewing on mobile)
-    if (agent == "default") {
-      google.maps.event.addListener(marker, "mouseover", function () {
-        this.old_ZIndex = this.getZIndex();
-        this.setZIndex(9999);
-        $("#marker" + i).css("display", "inline");
-        $("#marker" + i).css("z-index", "99999");
-      });
-      google.maps.event.addListener(marker, "mouseout", function () {
-        if (this.old_ZIndex && zoomLevel <= 15) {
-          this.setZIndex(this.old_ZIndex);
-          $("#marker" + i).css("display", "none");
-        }
-      });
-    }
-
-    // format marker URI for display and linking
-    var markerURI = val.uri || '';
-    if (markerURI.substr(0, 7) != "http://") {
-      markerURI = "http://" + markerURI;
-    }
-    var markerURI_short = markerURI.replace("http://", "");
-    var markerURI_short = markerURI_short.replace("www.", "");
-
-    // add marker click effects (open infowindow)
-    google.maps.event.addListener(marker, 'click', function () {
-      infowindow.setContent(
-        "<div class='marker_title'>" + val.title + "</div>" +
-          "<div class='marker_uri'><a target='_blank' href='" + markerURI + "'>" + markerURI_short +
-          "</a></div>" + "<div class='marker_desc'>" + val.description + "</div>" + "<div class='marker_address'>"+ val.description + " </div>"
-      )
-      ;
-      infowindow.open(map, this);
-    });
-
-// add marker label
-    var latLng = new google.maps.LatLng(val.lat, val.lng);
-    var label = new Label({
-      map: map,
-      id: i
-    });
-    label.bindTo('position', marker);
-    label.set("text", val.title);
-    label.bindTo('visible', marker);
-    label.bindTo('clickable', marker);
-    label.bindTo('zIndex', marker);
-  });
-
-
-// zoom to marker if selected in search typeahead list
-  $('#search').typeahead({
-    source: markerTitles,
-    onselect: function (obj) {
-      marker_id = jQuery.inArray(obj, markerTitles);
-      if (marker_id > -1) {
-        map.panTo(gmarkers[marker_id].getPosition());
-        map.setZoom(15);
-        google.maps.event.trigger(gmarkers[marker_id], 'click');
-      }
-      $("#search").val("");
-    }
-  });
-}
 
 
 // zoom to specific marker

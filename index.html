@@ -63,7 +63,7 @@ var defaultLng = 103.817711;
       <div class="left">
         <div class="logo">
           <a href="./">
-            <img src="images/logo.png" alt="" />
+            Vietnamese Restaurants in Singapore
           </a>
         </div>
         <div class="buttons">
@@ -84,8 +84,8 @@ var defaultLng = 103.817711;
           <div class="category_toggle" onclick="toggle('{{type.id}}')" id="filter_{{type.id}}">&nbsp;
           </div>
           <a href='#' onclick="toggleList('{{type.id}}');" class='category_info'>
-            <img src='./images/icons/{{type.id}}.png' alt='' />{{type.title}}
-            <span class='total'>(100)</span>
+            <img src="./images/icons/{{type.id}}.png" alt='' />{{type.title}}
+            <span class='total'>({{restaurantCount(type.id)}})</span>
           </a>
           <ul class='list-items list-{{type.id}}'>
             <li class='{{type.id}}' ng-repeat="item in restaurants | filter:{type: type.id}">
