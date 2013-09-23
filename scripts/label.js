@@ -74,6 +74,5 @@ Label.prototype.draw = function() {
   var zIndex = this.get('zIndex');
   div.style.zIndex = zIndex;
 
-
   this.span_.innerHTML = this.get('text').toString();
 };

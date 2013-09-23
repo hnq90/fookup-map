@@ -7,6 +7,75 @@ var agent = "default";
 var zoomControl = true;
 var markers = [];
 
+var FoodCtrl = function($scope, $http) {
+  $scope.restaurants = [];
+  $scope.types = [
+    {id: 'inexpensive', title: 'Inexpensive'},
+    {id: 'moderate', title: 'Moderate'},
+    {id: 'hiend', title: 'Hi-end'}
+  ];
+
+  // initialize map
+  $scope.init  = function() {
+    console.log('init');
+    // set map options
+    var myOptions = {
+      zoom: 12,
+      //minZoom: 10,
+      center: new google.maps.LatLng(defaultLat, defaultLng),
+      mapTypeId: google.maps.MapTypeId.ROADMAP,
+      streetViewControl: false,
+      mapTypeControl: false,
+      panControl: false,
+      zoomControl: zoomControl,
+      styles: mapStyles,
+      zoomControlOptions: {
+        style: google.maps.ZoomControlStyle.SMALL,
+        position: google.maps.ControlPosition.LEFT_CENTER
+      }
+    };
+    map = new google.maps.Map(document.getElementById('map_canvas'), myOptions);
+    zoomLevel = map.getZoom();
+
+    // prepare infowindow
+    infowindow = new google.maps.InfoWindow({
+      content: "holding..."
+    });
+
+    // only show marker labels if zoomed in
+    google.maps.event.addListener(map, 'zoom_changed', function () {
+      zoomLevel = map.getZoom();
+      if (zoomLevel <= 15) {
+        $(".marker_label").css("display", "none");
+      } else {
+        $(".marker_label").css("display", "inline");
+      }
+    });
+
+    $http.get('./restaurants.csv').success(function (response) {
+      var data = CSVToArray(response);
+      // 233 Quan An Vietnam,Singapore 427491 ,233 Joo Chiat Road Singapore,1.31101,103.901287,hiend
+      // title, postal_coe, addr, lat, lng, type
+      $.each(data, function (i, r) {
+        var place = {
+          id: i,
+          type: r[5],
+          title: r[0],
+          addr: r[2],
+          lat: r[3],
+          lng: r[4]
+        };
+        $scope.restaurants.push(place);
+        console.log(place);
+      });
+
+
+      processMarkers($scope.restaurants);
+    });
+  }
+
+}
+
 // detect browser agent
 $(document).ready(function () {
   if (navigator.userAgent.toLowerCase().indexOf("iphone") > -1 || navigator.userAgent.toLowerCase().indexOf("ipod") > -1) {
@@ -100,87 +169,7 @@ var mapStyles = [
   }
 ];
 
-// initialize map
-function initialize() {
-  // set map options
-  var myOptions = {
-    zoom: 12,
-    //minZoom: 10,
-    center: new google.maps.LatLng(defaultLatLng),
-    mapTypeId: google.maps.MapTypeId.ROADMAP,
-    streetViewControl: false,
-    mapTypeControl: false,
-    panControl: false,
-    zoomControl: zoomControl,
-    styles: mapStyles,
-    zoomControlOptions: {
-      style: google.maps.ZoomControlStyle.SMALL,
-      position: google.maps.ControlPosition.LEFT_CENTER
-    }
-  };
-  map = new google.maps.Map(document.getElementById('map_canvas'), myOptions);
-  zoomLevel = map.getZoom();
-
-  // prepare infowindow
-  infowindow = new google.maps.InfoWindow({
-    content: "holding..."
-  });
-
-  // only show marker labels if zoomed in
-  google.maps.event.addListener(map, 'zoom_changed', function () {
-    zoomLevel = map.getZoom();
-    if (zoomLevel <= 15) {
-      $(".marker_label").css("display", "none");
-    } else {
-      $(".marker_label").css("display", "inline");
-    }
-  });
-
-  // markers array: name, type (icon), lat, long, description, uri, address
-  markers = new Array();
-
-  $.get('./restaurants.csv', function (response) {
-    var data = CSVToArray(response);
-    // 233 Quan An Vietnam,Singapore 427491 ,233 Joo Chiat Road Singapore,1.31101,103.901287,hiend
-    // title, postal_coe, addr, lat, lng, type
-    $.each(data, function (i, r) {
-      var place = {
-        type: r[5],
-        title: r[0],
-        addr: r[2],
-        lat: r[3],
-        lng: r[4]
-      };
-      markers.push(place);
-    });
-    processMarkers();
-  });
-}
-
-// <?php
-// $marker_id = 0;
-// $count = Array();
-// foreach($types as $type) {
-//   $count[$type[0]] = 0;
-//   $places = mysql_query("SELECT * FROM places WHERE approved='1' AND type='$type[0]' ORDER BY title");
-//   $places_total = mysql_num_rows($places);
-//   while($place = mysql_fetch_assoc($places)) {
-//     $place['title'] = htmlspecialchars_decode(addslashes(htmlspecialchars($place['title'])));
-//     $place['description'] = htmlspecialchars_decode(addslashes(htmlspecialchars($place['description'])));
-//     $place['uri'] = addslashes(htmlspecialchars($place['uri']));
-//     $place['address'] = htmlspecialchars_decode(addslashes(htmlspecialchars($place['address'])));
-//     echo "
-//     markers.push(['".$place['title']."', '".$place['type']."', '".$place['lat']."', '".$place['lng']."', '".$place['description']."', '".$place['uri']."', '".$place['address']."']);
-//     markerTitles[".$marker_id."] = '".$place['title']."';
-//     ";
-
-//     $count[$place['type']]++;
-//     $marker_id++;
-//   }
-// }
-// ?>
-
-function processMarkers() {
+function processMarkers(markers) {
   // add markers
   $.each(markers, function (i, val) {
     infowindow = new google.maps.InfoWindow({
@@ -231,7 +220,7 @@ function processMarkers() {
     }
 
     // format marker URI for display and linking
-    var markerURI = val.uri;
+    var markerURI = val.uri || '';
     if (markerURI.substr(0, 7) != "http://") {
       markerURI = "http://" + markerURI;
     }
@@ -256,7 +245,7 @@ function processMarkers() {
       id: i
     });
     label.bindTo('position', marker);
-    label.set("text", val[0]);
+    label.set("text", val.title);
     label.bindTo('visible', marker);
     label.bindTo('clickable', marker);
     label.bindTo('zIndex', marker);
@@ -330,5 +319,3 @@ function markerListMouseOver(marker_id) {
 function markerListMouseOut(marker_id) {
   $("#marker" + marker_id).css("display", "none");
 }
-
-google.maps.event.addDomListener(window, 'load', initialize);
