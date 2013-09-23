@@ -1,7 +1,3 @@
-<?php
-include_once "header.php";
-?>
-
 <!DOCTYPE html>
 <html ng-app>
 <head>
@@ -14,7 +10,7 @@ This site was based on the Represent.LA project by:
 Create a map for your startup community!
 https://github.com/abenzer/represent-map
 -->
-<title><?= $title_tag ?></title>
+<title>Vietnamese Restaurants in Singapore</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta charset="UTF-8">
 
@@ -38,13 +34,8 @@ var defaultLng = 103.817711;
 </script>
 
 <script type="text/javascript" src="./app.js"></script>
-
-<? echo $head_html; ?>
 </head>
 <body ng-controller="FoodCtrl" ng-init="init()">
-
-  <!-- display error overlay if something went wrong -->
-  <?php echo $error; ?>
 
   <!-- facebook like button code -->
   <div id="fb-root"></div>
@@ -64,9 +55,9 @@ var defaultLng = 103.817711;
     <div class="wrapper">
       <div class="right">
         <div class="share">
-          <a href="https://twitter.com/share" class="twitter-share-button" data-url="<?= $domain ?>" data-text="<?= $twitter['share_text'] ?>" data-via="<?= $twitter['username'] ?>" data-count="none">Tweet</a>
+          <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://fookup.vietnam2020.org" data-text="Cool: Vietnamese Restaurants in Singapore" data-via="iamhuy" data-count="none">Tweet</a>
           <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-          <div class="fb-like" data-href="<?= $domain ?>" data-send="false" data-layout="button_count" data-width="100" data-show-faces="false" data-font="arial"></div>
+          <div class="fb-like" data-href="http://fookup.vietnam2020.org/" data-send="false" data-layout="button_count" data-width="100" data-show-faces="false" data-font="arial"></div>
         </div>
       </div>
       <div class="left">
@@ -105,9 +96,11 @@ var defaultLng = 103.817711;
           </ul>
         </div>
       </li>
-      <li class="blurb"><?= $blurb ?></li>
+      <li class="blurb">This map is made to show case the Vietnamese Restaurants in Singapore</li>
       <li class="attribution">
-        <?=$attribution?>
+        <span>
+          Based on <a href='http://www.represent.la' target='_blank'>RepresentLA</a>
+        </span>
       </li>
     </ul>
   </div>
@@ -120,18 +113,10 @@ var defaultLng = 103.817711;
     </div>
     <div class="modal-body">
       <p>
-        We built this map to connect and promote the tech startup community
-        in our beloved Los Angeles. We've seeded the map but we need
-        your help to keep it fresh. If you don't see your company, please
-        <?php if($sg_enabled) { ?>
-        <a href="#modal_add_choose" data-toggle="modal" data-dismiss="modal">submit it here</a>.
-        <?php } else { ?>
-        <a href="#modal_add" data-toggle="modal" data-dismiss="modal">submit it here</a>.
-        <?php } ?>
-        Let's put LA on the map together!
+        We built this map to connect and promote Vietnamese restaurants in Singapore.
       </p>
       <p>
-        Questions? Feedback? Connect with us: <a href="http://www.twitter.com/<?= $twitter['username'] ?>" target="_blank">@<?= $twitter['username'] ?></a>
+        Questions? Feedback? Connect with us: <a href="http://www.twitter.com/iamhuy" target="_blank">@iamhuy</a>
       </p>
       <p>
         If you want to support the LA community by linking to this map from your website,

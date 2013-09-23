@@ -66,7 +66,6 @@ var FoodCtrl = function($scope, $http) {
           lng: r[4]
         };
         $scope.restaurants.push(place);
-        console.log(place);
       });
 
 
